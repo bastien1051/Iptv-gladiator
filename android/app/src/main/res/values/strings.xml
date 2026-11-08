@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">IPTV Gladiator</string>
+    <string name="title_activity_main">IPTV Gladiator</string>
+    <string name="package_name">fr.editionsbastien.iptvgladiator</string>
+    <string name="custom_url_scheme">fr.editionsbastien.iptvgladiator</string>
+</resources>

@@ -1,0 +1,11 @@
+{
+  "appId": "fr.editionsbastien.iptvgladiator",
+  "appName": "IPTV Gladiator",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

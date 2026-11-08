@@ -1,0 +1,36 @@
+{
+  "name": "iptv-gladiator",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 4178 --strictPort",
+    "channels": "tsx scripts/build-channels.ts",
+    "build": "tsx scripts/build-channels.ts && tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4178 --strictPort",
+    "test": "vitest run",
+    "helper": "node server/index.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@fontsource/fraunces": "^5.3.0",
+    "@fontsource/outfit": "^5.3.0",
+    "@preact/signals": "^2.11.4",
+    "hls.js": "^1.7.4",
+    "mpegts.js": "^1.8.2",
+    "preact": "^11.1.1",
+    "shaka-player": "^5.3.4"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^24.19.2",
+    "@vitejs/plugin-legacy": "^8.2.4",
+    "playwright-core": "^1.65.0",
+    "tsx": "^4.23.15",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}
