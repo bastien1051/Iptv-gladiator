@@ -1,5 +1,6 @@
 import { useEffect } from 'preact/hooks'
 import { installFullscreenSync } from '../lib/fullscreen'
+import { showAppliedUpdate } from '../lib/updates'
 import { installNav } from '../nav'
 import { AboutView } from './AboutView'
 import { AbonnementView } from './AbonnementView'
@@ -47,6 +48,7 @@ const RAIL: { id: View; label: string; test?: string }[] = [
 
 export function App() {
   useEffect(() => {
+    showAppliedUpdate()
     void boot()
     const removeNav = installNav()
     const removeFullscreen = installFullscreenSync()

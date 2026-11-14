@@ -1,9 +1,9 @@
-import { exitPlayerFullscreen, isPlayerFullscreen, togglePlayerFullscreen } from './lib/fullscreen'
-import { phoneLayout } from './lib/phone'
+import { isPlayerFullscreen, togglePlayerFullscreen } from './lib/fullscreen'
 import {
   back,
   closePlayer,
   currentId,
+  go,
   hotkeys,
   moreOpen,
   multiHooks,
@@ -97,15 +97,12 @@ function onKey(event: KeyboardEvent): void {
   }
   if (!typing && isBackKey(event)) {
     event.preventDefault()
-    if (phoneLayout() && currentId.value) {
+    if (currentId.value || isPlayerFullscreen()) {
       closePlayer()
       return
     }
-    if (isPlayerFullscreen()) {
-      exitPlayerFullscreen()
-      return
-    }
     if (query.value && view.value !== 'adult') query.value = ''
+    else if (view.value !== 'home') go('home')
     else back()
     return
   }
@@ -198,14 +195,37 @@ function onClickCapture(event: Event): void {
   event.stopPropagation()
 }
 
+export function handleSystemBack(): boolean {
+  if (currentId.value || isPlayerFullscreen()) {
+    closePlayer()
+    return true
+  }
+  if (view.value !== 'home' || moreOpen.value || query.value) {
+    if (query.value && view.value !== 'adult') query.value = ''
+    moreOpen.value = false
+    go('home')
+    return true
+  }
+  return false
+}
+
+function onFullscreenDismissed(): void {
+  if (currentId.value) closePlayer()
+}
+
 export function installNav(): () => void {
+  const host = window as Window & { __iptvBack?: () => boolean }
+  host.__iptvBack = handleSystemBack
   window.addEventListener('keydown', onKey)
   window.addEventListener('keyup', onKeyUp)
   window.addEventListener('click', onClickCapture, true)
+  window.addEventListener('iptv-fullscreen-dismissed', onFullscreenDismissed)
   return () => {
+    if (host.__iptvBack === handleSystemBack) delete host.__iptvBack
     window.removeEventListener('keydown', onKey)
     window.removeEventListener('keyup', onKeyUp)
     window.removeEventListener('click', onClickCapture, true)
+    window.removeEventListener('iptv-fullscreen-dismissed', onFullscreenDismissed)
   }
 }
 

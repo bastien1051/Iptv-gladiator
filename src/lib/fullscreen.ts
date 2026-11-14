@@ -23,6 +23,7 @@ type ScreenPlugin = {
 }
 
 const nativeScreen = registerPlugin<ScreenPlugin>('GladiatorScreen')
+let ignoreDismiss = false
 
 export function playerStage(): FullscreenElement | null {
   return document.getElementById('player-stage') as FullscreenElement | null
@@ -85,17 +86,17 @@ export function enterPlayerFullscreen(): void {
 }
 
 export function exitPlayerFullscreen(): void {
+  ignoreDismiss = true
+  window.setTimeout(() => { ignoreDismiss = false }, 500)
   fullscreenOn.value = false
   playerStage()?.classList.remove('is-fullscreen', 'fill-screen')
   const doc = document as FullscreenDocument
   try {
-    if (fullscreenNode()) {
-      const pending = document.exitFullscreen?.()
-      if (pending && typeof pending.catch === 'function') void pending.catch(() => undefined)
-      doc.webkitExitFullscreen?.()
-      doc.mozCancelFullScreen?.()
-      doc.msExitFullscreen?.()
-    }
+    const pending = document.exitFullscreen?.()
+    if (pending && typeof pending.catch === 'function') void pending.catch(() => undefined)
+    doc.webkitExitFullscreen?.()
+    doc.mozCancelFullScreen?.()
+    doc.msExitFullscreen?.()
   } catch {
     /* ignore */
   }
@@ -117,12 +118,14 @@ export function installFullscreenSync(): () => void {
       return
     }
     // Ne pas retirer le plein écran CSS si l’API a été refusée (navigateurs Tizen).
-    if (apiWasActive && fullscreenOn.value && !stage?.classList.contains('fill-screen')) {
-      apiWasActive = false
-      fullscreenOn.value = false
-      stage?.classList.remove('is-fullscreen')
-      void nativeExit()
-    }
+    if (!apiWasActive) return
+    apiWasActive = false
+    const dismissed = !ignoreDismiss
+    ignoreDismiss = false
+    fullscreenOn.value = false
+    stage?.classList.remove('is-fullscreen', 'fill-screen')
+    void nativeExit()
+    if (dismissed) window.dispatchEvent(new CustomEvent('iptv-fullscreen-dismissed'))
   }
   document.addEventListener('fullscreenchange', sync)
   document.addEventListener('webkitfullscreenchange', sync)

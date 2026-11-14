@@ -503,9 +503,19 @@ export class Engine {
     }
     this.backend = 'none'
     this.video.querySelectorAll('track[data-external]').forEach((node) => node.remove())
-    if (this.video.src) {
-      this.video.removeAttribute('src')
-      this.video.load()
+    const video = this.video
+    const wipe = () => {
+      try {
+        video.pause()
+        video.srcObject = null
+        video.src = ''
+        video.removeAttribute('src')
+        video.load()
+      } catch {
+        /* le média est déjà détaché */
+      }
     }
+    wipe()
+    window.setTimeout(wipe, 0)
   }
 }

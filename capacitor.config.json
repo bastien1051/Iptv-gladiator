@@ -6,6 +6,9 @@
     "allowMixedContent": true
   },
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "url": "https://bastien1051.github.io/Iptv-gladiator/",
+    "errorPath": "index.html",
+    "allowNavigation": ["bastien1051.github.io"]
   }
 }

@@ -21,6 +21,7 @@ import { Logo } from './rows'
 import {
   closePlayer,
   consumePlayable,
+  playerHooks,
   currentId,
   findChannel,
   go,
@@ -59,9 +60,10 @@ export function PlayerDock({ compact }: { compact: boolean }) {
   const [subs, setSubs] = useState<TrackChoice[]>([])
   const [preference, setPreference] = useState<AutoSubPreference>(() => readAutoSubPreference(typeof localStorage === 'undefined' ? null : localStorage))
   const [caption, setCaption] = useState('')
-  const [autoProgress, setAutoProgress] = useState<number | null>(null)
   const [autoNote, setAutoNote] = useState('')
   const [autoOn, setAutoOn] = useState(false)
+  const [flagToast, setFlagToast] = useState('')
+  const progressNoted = useRef(false)
   const [fileHold, setFileHold] = useState(false)
   const [heardFrench, setHeardFrench] = useState(false)
   const [blocked, setBlocked] = useState(false)
@@ -129,7 +131,12 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     }
     hotkeys.record = () => { void toggleRecord() }
     autoRef.current = new AutoSubs()
+    playerHooks.stop = () => {
+      autoRef.current?.stop()
+      engine.stop()
+    }
     return () => {
+      playerHooks.stop = () => undefined
       video.removeEventListener('pause', onPause)
       autoRef.current?.stop()
       autoRef.current = null
@@ -164,8 +171,8 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     setPlaying(false)
     setCaption('')
     setAutoNote('')
-    setAutoProgress(null)
     setAutoOn(false)
+    progressNoted.current = false
     setFileHold(false)
     setHeardFrench(false)
     setBlocked(false)
@@ -219,7 +226,12 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     setAutoNote('')
     session.start(video, {
       onCaption: (text) => setCaption(text),
-      onProgress: (progress) => setAutoProgress(progress >= 100 ? null : progress),
+      onProgress: () => {
+        if (progressNoted.current) return
+        progressNoted.current = true
+        setFlagToast('Téléchargement du modèle…')
+        window.setTimeout(() => setFlagToast((current) => current === 'Téléchargement du modèle…' ? '' : current), 3000)
+      },
       onStatus: (text) => { if (text) setAutoNote(text) },
       onLanguage: (language) => {
         if (isFrenchLanguage(language)) {
@@ -237,6 +249,20 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     })
     return () => session.stop()
   }, [autoRun, id, token])
+
+  useEffect(() => {
+    if (!id || !autoOn) return
+    setFlagToast('Sous-titres FR auto')
+    const timer = window.setTimeout(() => setFlagToast(''), 3000)
+    return () => window.clearTimeout(timer)
+  }, [autoOn, id])
+
+  useEffect(() => {
+    if (!blocked || !autoNote) return
+    setFlagToast(autoNote)
+    const timer = window.setTimeout(() => setFlagToast(''), 3000)
+    return () => window.clearTimeout(timer)
+  }, [blocked, autoNote])
 
   async function toggleRecord(): Promise<void> {
     const video = videoRef.current
@@ -280,6 +306,8 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     setHeardFrench(false)
     setBlocked(false)
     setFileHold(false)
+    setFlagToast(next === 'off' ? 'Sous-titres FR auto coupés' : 'Sous-titres FR auto')
+    window.setTimeout(() => setFlagToast(''), 3000)
   }
 
   const lastTap = useRef(0)
@@ -397,12 +425,12 @@ export function PlayerDock({ compact }: { compact: boolean }) {
           </label>
         </div>
       )}
-      {(autoOn || caption || (autoNote && blocked)) && (
+      {flagToast && (
+        <p class={`auto-subs-toast ${fullscreenOn.value && !chrome ? 'is-hidden' : ''}`} data-testid="auto-subs-toast">{flagToast}</p>
+      )}
+      {caption && (
         <div class="live-caption" data-testid="auto-subs">
-          {autoOn && <p class="auto-subs-flag">Sous-titres FR auto</p>}
-          {autoProgress !== null && <p class="auto-subs-progress">Téléchargement du modèle {autoProgress} %</p>}
-          {caption && <p class="auto-subs-text">{caption}</p>}
-          {blocked && autoNote && <p class="auto-subs-note">{autoNote}</p>}
+          <p class="auto-subs-text">{caption}</p>
         </div>
       )}
       {info && guide.current && (

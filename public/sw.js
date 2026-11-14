@@ -1,4 +1,4 @@
-const CACHE = 'iptv-gladiator-v3'
+const CACHE = 'iptv-gladiator-v4'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -9,9 +9,10 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))),
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim()).then(() => self.clients.matchAll({ type: 'window' })).then((clients) => {
+      clients.forEach((client) => client.postMessage({ type: 'sw-updated' }))
+    }),
   )
-  self.clients.claim()
 })
 
 self.addEventListener('fetch', (event) => {

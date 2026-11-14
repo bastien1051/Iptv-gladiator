@@ -272,7 +272,14 @@ h2 { font-size: 1.7rem; }
   object-fit: contain !important;
   background: #000 !important;
 }
-.stage.is-idle:not(.is-fullscreen) { display: none !important; }
+.stage.is-idle,
+.stage.is-idle.is-fullscreen,
+.stage.is-idle:fullscreen,
+.stage.is-idle:-webkit-full-screen {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 .player-close {
   position: absolute;
   top: 8px;
@@ -388,21 +395,36 @@ h2 { font-size: 1.7rem; }
   position: absolute;
   left: 8%;
   right: 8%;
-  bottom: 64px;
+  bottom: 18px;
   z-index: 4;
   display: grid;
-  gap: 6px;
   justify-items: center;
   pointer-events: none;
   text-align: center;
 }
-.auto-subs-flag, .auto-subs-progress, .auto-subs-note {
+.auto-subs-toast {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
   margin: 0;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.62);
+  background: rgba(0, 0, 0, 0.72);
   color: var(--brass-2);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: auto-subs-toast 3s ease forwards;
+}
+.auto-subs-toast.is-hidden,
+.stage.chrome-off .auto-subs-toast { opacity: 0 !important; }
+@keyframes auto-subs-toast {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: 0; }
 }
 .auto-subs-text {
   margin: 0;
@@ -499,9 +521,9 @@ h2 { font-size: 1.7rem; }
   .shell.dock-off .tabbar, .shell.dock-hidden .tabbar { grid-row: 2; }
   .shelf-head .text-btn { align-self: flex-end; }
   .shell.dock-off, .shell.dock-hidden { grid-template-rows: minmax(0, 1fr) auto; }
-  .shell.dock-full .stage:not(.is-fullscreen),
-  .shell.dock-mini .stage:not(.is-fullscreen),
-  .stage.compact:not(.is-fullscreen) {
+  .shell.dock-full .stage:not(.is-fullscreen):not(.is-idle),
+  .shell.dock-mini .stage:not(.is-fullscreen):not(.is-idle),
+  .stage.compact:not(.is-fullscreen):not(.is-idle) {
     display: block;
     grid-template-columns: none;
     width: 100%;

@@ -66,6 +66,7 @@ const defaultSettings: Settings = {
 }
 
 const viewStack = signal<View[]>(['home'])
+let userNavigated = false
 export const view = computed(() => viewStack.value[viewStack.value.length - 1] ?? 'home')
 export const channels = signal<Channel[]>([])
 export const adultChannels = signal<Channel[]>([])
@@ -193,8 +194,23 @@ export const hotkeys = {
   play: () => undefined as void,
 }
 export const multiHooks: { zap: ((delta: number) => void) | null } = { zap: null }
+export const playerHooks: { stop: () => void } = { stop: () => undefined }
+
+function focusHome(): void {
+  const focus = () => {
+    const target = document.querySelector('[data-testid="home"] .row-main[data-nav], [data-testid="home"] .card[data-nav], [data-testid="direct"] .row-main[data-nav]')
+    if (!(target instanceof HTMLElement)) return false
+    target.focus()
+    target.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    return document.activeElement === target
+  }
+  window.setTimeout(() => {
+    if (!focus()) window.setTimeout(focus, 200)
+  }, 60)
+}
 
 export function go(next: View): void {
+  userNavigated = true
   moreOpen.value = false
   viewStack.value = next === 'home' ? ['home'] : ['home', next]
 }
@@ -257,14 +273,20 @@ function queue(item: Playable): void {
 }
 
 export function closePlayer(fromHistory = false): void {
+  playerHooks.stop()
   exitPlayerFullscreen()
+  document.getElementById('player-stage')?.classList.remove('is-fullscreen', 'fill-screen')
   currentId.value = null
   playToken.value += 1
   playerFatal.value = ''
   playerStatus.value = ''
   needsGesture.value = false
   queued = null
-  if (!fromHistory && typeof history !== 'undefined' && history.state?.player) history.back()
+  go('home')
+  focusHome()
+  if (!fromHistory && typeof history !== 'undefined' && history.state?.player) {
+    history.replaceState(null, '')
+  }
 }
 
 export function toPlayable(channel: Channel, kind: PlayKind, startAt?: number): Playable {
@@ -1000,7 +1022,7 @@ export async function boot(): Promise<void> {
   const epgUpdated = (await kvGet<number>('epgUpdated')) ?? 0
   await retryLoad()
   if (!epg || Date.now() - epgUpdated > 6 * 60 * 60 * 1000) void refreshEpg()
-  if (settings.value.resumeLast && settings.value.lastSafeChannelId && findChannel(settings.value.lastSafeChannelId)) {
+  if (!userNavigated && settings.value.resumeLast && settings.value.lastSafeChannelId && findChannel(settings.value.lastSafeChannelId)) {
     go('direct')
     playChannel(settings.value.lastSafeChannelId)
   }
