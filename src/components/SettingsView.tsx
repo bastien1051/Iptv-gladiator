@@ -31,6 +31,7 @@ export function SettingsView() {
   const [epg, setEpg] = useState({ url: '', name: '' })
   const [pin, setPin] = useState({ current: '', next: '', confirm: '' })
   const [pinError, setPinError] = useState('')
+  const [sourceNote, setSourceNote] = useState('')
   const current = settings.value
 
   return (
@@ -87,7 +88,8 @@ export function SettingsView() {
             </li>
           ))}
         </ul>
-        <form class="stack" onSubmit={(event) => { event.preventDefault(); void addM3uUrl(m3uUrl, m3uName); setM3uUrl('') }}>
+        {sourceNote && <p class="abo-note" data-testid="settings-source-note">{sourceNote}</p>}
+        <form class="stack" onSubmit={(event) => { event.preventDefault(); setSourceNote(''); void addM3uUrl(m3uUrl, m3uName).then(() => setM3uUrl('')).catch((error: unknown) => setSourceNote(error instanceof Error ? error.message : 'Import impossible')) }}>
           <h3>Ajouter une liste M3U</h3>
           <label class="field">Nom <input data-nav value={m3uName} onInput={(event) => setM3uName((event.currentTarget as HTMLInputElement).value)} /></label>
           <label class="field">Adresse <input data-nav required type="url" value={m3uUrl} onInput={(event) => setM3uUrl((event.currentTarget as HTMLInputElement).value)} /></label>
@@ -100,7 +102,7 @@ export function SettingsView() {
             void file.text().then((text) => addM3uFile(file.name, text))
           }} />
         </label>
-        <form class="stack" onSubmit={(event) => { event.preventDefault(); void addXtream(xtream.base, xtream.username, xtream.password, xtream.name) }}>
+        <form class="stack" onSubmit={(event) => { event.preventDefault(); setSourceNote(''); void addXtream(xtream.base, xtream.username, xtream.password, xtream.name).catch((error: unknown) => setSourceNote(error instanceof Error ? error.message : 'Connexion impossible')) }}>
           <h3>Serveur Xtream Codes</h3>
           <p class="fine">Pour un serveur que vous exploitez déjà. Les films, les séries et le replay dépendent de ce serveur.</p>
           <label class="field">Nom <input data-nav value={xtream.name} onInput={(event) => setXtream({ ...xtream, name: (event.currentTarget as HTMLInputElement).value })} /></label>

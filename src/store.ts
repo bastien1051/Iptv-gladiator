@@ -394,6 +394,8 @@ export function noteFailure(id: string | null): void {
     void persistPrefs()
   }
   if (!settings.value.autoSkip) return
+  const list = zapList.value.length ? zapList.value : directList.value
+  if (list.filter((channel) => channel.id !== id).length === 0) return
   if (skipStreak >= 8) {
     toast('Plusieurs chaînes ne répondent pas. La lecture est en pause.', 'warn')
     return

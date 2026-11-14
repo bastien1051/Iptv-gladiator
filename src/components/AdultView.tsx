@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks'
 import { VirtualList, useRowFocus } from './VirtualList'
 import { ChannelButton } from './rows'
+import { ADULT_SITES } from '../data/adult-sites'
 import {
   adultChannels,
   adultLoading,
@@ -102,6 +103,18 @@ export function AdultView() {
       </header>
       {adultLoading.value && <p>Chargement de la liste publique…</p>}
       {adultMessage.value && <p class="empty">{adultMessage.value}</p>}
+      <section class="adult-sites" data-testid="adult-sites">
+        <h2>Sites gratuits 18+</h2>
+        <p class="fine">Liens vers les sites officiels uniquement. Ils s’ouvrent dans le navigateur, sans lecture dans IPTV Gladiator. Aucune vidéo n’est intégrée ni redistribuée.</p>
+        <div class="site-grid">
+          {ADULT_SITES.map((site) => (
+            <a key={site.url} class="site-tile" data-nav href={site.url} target="_blank" rel="noopener noreferrer">
+              <strong>{site.name}</strong>
+              <span>{site.host}</span>
+            </a>
+          ))}
+        </div>
+      </section>
       <div ref={focusRef} data-row-count={list.length} class="list-wrap">
         {list.length > 0 && <VirtualList items={list} rowHeight={72} render={(channel, index) => <ChannelButton channel={channel} index={index} list={list} />} />}
       </div>

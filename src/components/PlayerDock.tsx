@@ -5,6 +5,18 @@ import { phoneLayout } from '../lib/phone'
 import { downloadBlob, startCapture } from '../player/record'
 import { formatClock, formatTimecode, slug } from '../lib/text'
 import { toVtt } from '../lib/subs'
+import { AutoSubs } from '../player/auto-subs'
+import {
+  assessDevice,
+  currentDevice,
+  isFrenchLanguage,
+  languageHint,
+  readAutoSubPreference,
+  shouldStartAutoSubs,
+  writeAutoSubPreference,
+  type AutoSubPreference,
+} from '../player/auto-subs-policy'
+import type { TrackChoice } from '../types'
 import { Logo } from './rows'
 import {
   closePlayer,
@@ -38,11 +50,21 @@ export function PlayerDock({ compact }: { compact: boolean }) {
   const engineRef = useRef<Engine | null>(null)
   const idRef = useRef<string | null>(null)
   const captureRef = useRef<{ stop: () => Promise<Blob> } | null>(null)
+  const autoRef = useRef<AutoSubs | null>(null)
   const [menu, setMenu] = useState<'none' | 'quality' | 'subs'>('none')
   const [levels, setLevels] = useState<{ index: number; label: string }[]>([])
   const [level, setLevel] = useState(-1)
-  const [audio, setAudio] = useState<{ index: number; label: string }[]>([])
-  const [subs, setSubs] = useState<{ index: number; label: string }[]>([])
+  const [audio, setAudio] = useState<TrackChoice[]>([])
+  const [audioIndex, setAudioIndex] = useState(-1)
+  const [subs, setSubs] = useState<TrackChoice[]>([])
+  const [preference, setPreference] = useState<AutoSubPreference>(() => readAutoSubPreference(typeof localStorage === 'undefined' ? null : localStorage))
+  const [caption, setCaption] = useState('')
+  const [autoProgress, setAutoProgress] = useState<number | null>(null)
+  const [autoNote, setAutoNote] = useState('')
+  const [autoOn, setAutoOn] = useState(false)
+  const [fileHold, setFileHold] = useState(false)
+  const [heardFrench, setHeardFrench] = useState(false)
+  const [blocked, setBlocked] = useState(false)
   const [info, setInfo] = useState(false)
   const [muted, setMuted] = useState(false)
   const [playing, setPlaying] = useState(false)
@@ -72,13 +94,18 @@ export function PlayerDock({ compact }: { compact: boolean }) {
         setLevels(next)
         setLevel(current)
       },
-      onAudio: (next) => setAudio(next),
+      onAudio: (next, current) => {
+        setAudio(next)
+        setAudioIndex(current)
+      },
       onSubs: (next) => setSubs(next),
       onTime: (position, duration) => {
         setClock({ position, duration })
         if (playKind.value !== 'live' && idRef.current) savePosition(idRef.current, position, duration, channel?.name || 'Lecture')
       },
       onPlaying: () => {
+        const media = videoRef.current
+        if (!media || (media.videoWidth === 0 && media.currentTime < 0.25)) return
         startedRef.current = true
         setPlaying(true)
         needsGesture.value = false
@@ -101,8 +128,11 @@ export function PlayerDock({ compact }: { compact: boolean }) {
       else video.pause()
     }
     hotkeys.record = () => { void toggleRecord() }
+    autoRef.current = new AutoSubs()
     return () => {
       video.removeEventListener('pause', onPause)
+      autoRef.current?.stop()
+      autoRef.current = null
       engine.destroy()
       engineRef.current = null
     }
@@ -132,6 +162,14 @@ export function PlayerDock({ compact }: { compact: boolean }) {
   useEffect(() => {
     startedRef.current = false
     setPlaying(false)
+    setCaption('')
+    setAutoNote('')
+    setAutoProgress(null)
+    setAutoOn(false)
+    setFileHold(false)
+    setHeardFrench(false)
+    setBlocked(false)
+    autoRef.current?.stop()
     if (!id) return
     const timer = window.setTimeout(() => {
       if (startedRef.current || !idRef.current) return
@@ -158,6 +196,47 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     const found = findChannel(id)
     if (found) engine.load(toPlayable(found, 'live'))
   }, [id, token])
+
+  const device = assessDevice(currentDevice())
+  const hint = languageHint(audio[audioIndex]?.lang || audio[0]?.lang || '', channel?.languages ?? [])
+  const autoRun = !!id && playing && !fileHold && !heardFrench && !blocked && shouldStartAutoSubs({
+    preference,
+    deviceOk: device.ok,
+    hint,
+    subs,
+  })
+
+  useEffect(() => {
+    const session = autoRef.current
+    const video = videoRef.current
+    if (!session || !video) return
+    if (!autoRun) {
+      session.stop()
+      setAutoOn(false)
+      return
+    }
+    setAutoOn(true)
+    setAutoNote('')
+    session.start(video, {
+      onCaption: (text) => setCaption(text),
+      onProgress: (progress) => setAutoProgress(progress >= 100 ? null : progress),
+      onStatus: (text) => { if (text) setAutoNote(text) },
+      onLanguage: (language) => {
+        if (isFrenchLanguage(language)) {
+          setHeardFrench(true)
+          setCaption('')
+          setAutoOn(false)
+        }
+      },
+      onUnavailable: (message) => {
+        setBlocked(true)
+        setAutoOn(false)
+        setCaption('')
+        setAutoNote(message)
+      },
+    })
+    return () => session.stop()
+  }, [autoRun, id, token])
 
   async function toggleRecord(): Promise<void> {
     const video = videoRef.current
@@ -187,8 +266,20 @@ export function PlayerDock({ compact }: { compact: boolean }) {
   async function onSubtitleFile(file: File | undefined): Promise<void> {
     if (!file) return
     const text = await file.text()
+    setFileHold(true)
+    autoRef.current?.stop()
+    setAutoOn(false)
+    setCaption('')
     if (file.name.toLowerCase().endsWith('.srt')) engineRef.current?.addSubtitleText(toVtt(text), file.name)
     else engineRef.current?.addSubtitleText(text, file.name)
+  }
+
+  function setAutoPreference(next: AutoSubPreference): void {
+    writeAutoSubPreference(typeof localStorage === 'undefined' ? null : localStorage, next)
+    setPreference(next)
+    setHeardFrench(false)
+    setBlocked(false)
+    setFileHold(false)
   }
 
   const lastTap = useRef(0)
@@ -288,15 +379,30 @@ export function PlayerDock({ compact }: { compact: boolean }) {
       )}
       {menu === 'subs' && (
         <div class="popover">
+          <button type="button" data-nav data-testid="auto-subs-toggle" class={preference === 'off' ? '' : 'on'} onClick={() => { setAutoPreference(preference === 'off' ? 'on' : 'off'); setMenu('none') }}>
+            {preference === 'off' ? 'Activer les sous-titres FR auto' : 'Désactiver les sous-titres FR auto'}
+          </button>
+          <p class="fine">Ils se lancent tout seuls si la langue parlée n’est pas le français. Le choix est mémorisé sur cet appareil.</p>
+          {!device.ok && <p class="fine">{device.message}</p>}
+          {autoNote && <p class="fine">{autoNote}</p>}
           <button type="button" data-nav onClick={() => { engineRef.current?.setSub(-1); setMenu('none') }}>Aucun</button>
           {subs.map((item) => (
-            <button key={item.index} type="button" data-nav onClick={() => { engineRef.current?.setSub(item.index); setMenu('none') }}>{item.label}</button>
+            <button key={item.index} type="button" data-nav onClick={() => { setFileHold(true); autoRef.current?.stop(); setAutoOn(false); engineRef.current?.setSub(item.index); setMenu('none') }}>{item.label}</button>
           ))}
           {audio.length > 0 && <p class="fine">Pistes audio : {audio.map((item) => item.label).join(', ')}</p>}
+          <p class="fine">Un fichier .srt ou .vtt peut s’ajouter en complément.</p>
           <label class="file">
             Fichier .srt ou .vtt
             <input type="file" accept=".srt,.vtt,text/vtt" onChange={(event) => { void onSubtitleFile((event.currentTarget as HTMLInputElement).files?.[0]) }} />
           </label>
+        </div>
+      )}
+      {(autoOn || caption || (autoNote && blocked)) && (
+        <div class="live-caption" data-testid="auto-subs">
+          {autoOn && <p class="auto-subs-flag">Sous-titres FR auto</p>}
+          {autoProgress !== null && <p class="auto-subs-progress">Téléchargement du modèle {autoProgress} %</p>}
+          {caption && <p class="auto-subs-text">{caption}</p>}
+          {blocked && autoNote && <p class="auto-subs-note">{autoNote}</p>}
         </div>
       )}
       {info && guide.current && (

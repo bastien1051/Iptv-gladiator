@@ -384,6 +384,51 @@ h2 { font-size: 1.7rem; }
 .popover { display: flex; flex-wrap: wrap; gap: 8px; }
 .resume-inline { position: absolute; top: 12px; right: 12px; }
 .live-clock { position: absolute; top: 10px; left: 12px; color: var(--brass-2); font-variant-numeric: tabular-nums; }
+.live-caption {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 64px;
+  z-index: 4;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  pointer-events: none;
+  text-align: center;
+}
+.auto-subs-flag, .auto-subs-progress, .auto-subs-note {
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: var(--brass-2);
+  font-size: 0.82rem;
+}
+.auto-subs-text {
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  font-size: clamp(1rem, 2.4vw, 1.45rem);
+  line-height: 1.35;
+  text-shadow: 0 1px 2px #000;
+}
+.adult-sites { margin-top: 28px; }
+.site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+.site-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 84px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+  color: inherit;
+  text-decoration: none;
+}
+.site-tile span { color: var(--muted); font-size: 0.85rem; }
 
 .guide-scroll { overflow: auto; }
 .guide-times, .guide-track { display: grid; grid-template-columns: repeat(8, 110px); position: relative; min-height: 54px; }

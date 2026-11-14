@@ -11,7 +11,7 @@ export function HelpView() {
         <li>Chiffres : numéro dans la liste affichée. P : chaîne précédente. M : muet. F ou double tape : plein écran. Maintenir OK : plein écran. Retour quitte le plein écran. I : infos. R : enregistrer.</li>
       </ul>
       <h2>Sous-titres</h2>
-      <p>Le lecteur affiche les pistes déjà présentes dans le flux HLS ou DASH, et un fichier .srt ou .vtt que vous chargez. Si la piste audio annonce une langue autre que le français et qu’une piste française existe, elle est activée. La traduction automatique des dialogues en direct n’est pas fournie.</p>
+      <p>Si la langue parlée n’est pas le français, et qu’aucune piste française n’est fournie, les sous-titres français se lancent tout seuls sur cet appareil. La reconnaissance et la traduction restent dans le navigateur, sans service payant. Le menu Sous-titres permet de les couper : le choix est mémorisé. Un fichier .srt ou .vtt reste disponible en complément. Sur un téléviseur ou un appareil trop limité, ils restent désactivés. Si le flux interdit la capture audio, le lecteur affiche « Sous-titres auto indisponibles pour cette chaîne » et la vidéo continue.</p>
       <h2>Lecture</h2>
       <p>HLS est lu avec hls.js (débit automatique et mémoire tampon réglable). Les flux .ts et FLV passent par mpegts.js, le DASH par Shaka Player, et le navigateur sert de repli. Une coupure relance le flux avec un délai croissant. Une image figée est reprise. Un flux qui échoue n’arrête pas l’application : un message s’affiche, puis la chaîne suivante si l’option est active.</p>
       <h2>Enregistrement</h2>

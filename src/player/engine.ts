@@ -82,6 +82,7 @@ export class Engine {
   private watchTimer = 0
   private lastTime = 0
   private stall = 0
+  private cold = 0
   private frenchDone = false
   private mediaRecovered = false
   private destroyed = false
@@ -104,6 +105,7 @@ export class Engine {
     this.urlIndex = 0
     this.retryCount = 0
     this.stall = 0
+    this.cold = 0
     this.frenchDone = false
     this.mediaRecovered = false
     this.handlers.onStatus('Connexion…')
@@ -202,11 +204,21 @@ export class Engine {
   }
 
   private watch = (): void => {
-    if (!this.item || this.video.paused || this.video.ended || this.video.seeking || this.video.readyState < 2) {
-      this.lastTime = this.video.currentTime
+    if (!this.item || this.video.ended) {
       this.stall = 0
+      this.cold = 0
       return
     }
+    if (this.video.paused || this.video.seeking || this.video.readyState < 2) {
+      this.lastTime = this.video.currentTime
+      this.stall = 0
+      if (!this.video.paused && !this.video.seeking && this.video.readyState < 2) {
+        this.cold += 1
+        if (this.cold === 6) this.scheduleRetry('Le flux ne répond pas.', this.token)
+      } else this.cold = 0
+      return
+    }
+    this.cold = 0
     if (Math.abs(this.video.currentTime - this.lastTime) < 0.25) {
       this.stall += 1
       if (this.stall === 4) {
@@ -305,8 +317,9 @@ export class Engine {
       return
     }
     const buffer = this.settings().bufferSec
+    const tv = /Tizen|Web0S|WebOS|SMART-TV|SmartTV|HbbTV|AFT|Android TV/i.test(navigator.userAgent)
     const hls = new Hls({
-      enableWorker: true,
+      enableWorker: !tv,
       lowLatencyMode: false,
       capLevelToPlayerSize: true,
       maxBufferLength: buffer,

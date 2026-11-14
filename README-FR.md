@@ -136,7 +136,7 @@ Dans Réglages, relais local : `http://127.0.0.1:8787`. Ne publiez pas ce proces
 
 - Beaucoup de flux publics tombent, sont géobloqués ou refusent le navigateur (CORS). Après deux échecs, la chaîne est marquée hors service. Le relais local contourne le CORS, pas un géoblocage.
 - Le lecteur enchaîne hls.js (HLS, débit automatique), mpegts.js (`.ts` et FLV), Shaka Player (DASH) et la lecture native. Les flux chiffrés ne sont pas lus.
-- Les sous-titres affichés sont ceux du flux, ou un fichier `.srt` / `.vtt`. Si l’audio est annoncé dans une autre langue et qu’une piste française existe, elle s’active. Il n’y a pas de traduction automatique des dialogues.
+- Les sous-titres français automatiques s’activent lorsque la langue parlée n’est pas le français et qu’aucune piste française n’existe. Le traitement reste dans l’appareil (Whisper, puis traduction vers le français). On peut les couper dans le menu Sous-titres ; le choix est mémorisé. Un fichier `.srt` / `.vtt` reste possible. Les téléviseurs et les appareils trop limités ne les lancent pas.
 - L’onglet **Adulte** reste visible et demande un code à 4 chiffres, avec une confirmation 18+ la première fois. Au 8 novembre 2026, aucun flux officiel gratuit et lisible n’a pu être intégré : iptv-org ne publie plus cette catégorie, et les listes qui rediffusent des chaînes payantes ont été écartées. Une source que vous ajoutez peut en contenir : elles sont rangées ici, et restent absentes de l’accueil, de la recherche et des récents tant que le code n’est pas saisi.
 - Le guide préchargé ne couvre pas toute la TNT. Ajoutez un XMLTV si vous en avez un.
 - Le code parental est un verrou local. Il ne chiffre pas les flux.

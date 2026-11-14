@@ -17,6 +17,7 @@
     "@capacitor/core": "^8.6.0",
     "@fontsource/fraunces": "^5.3.0",
     "@fontsource/outfit": "^5.3.0",
+    "@huggingface/transformers": "^4.3.2",
     "@preact/signals": "^2.11.4",
     "hls.js": "^1.7.4",
     "mpegts.js": "^1.8.2",

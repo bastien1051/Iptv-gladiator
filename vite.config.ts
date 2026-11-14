@@ -34,6 +34,8 @@ export default defineConfig({
   ],
   server: { host: '0.0.0.0', port: 4178, strictPort: true },
   preview: { host: '0.0.0.0', port: 4178, strictPort: true },
+  optimizeDeps: { exclude: ['@huggingface/transformers'] },
+  worker: { format: 'es' },
   build: { chunkSizeWarningLimit: 2500, target: 'chrome63' },
   test: {
     environment: 'node',

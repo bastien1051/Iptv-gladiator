@@ -1,4 +1,4 @@
-const CACHE = 'iptv-gladiator-v2'
+const CACHE = 'iptv-gladiator-v3'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
