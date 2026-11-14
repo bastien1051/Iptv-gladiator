@@ -178,6 +178,56 @@ h2 { font-size: 1.7rem; }
   background: linear-gradient(180deg, #22251c, #171910);
 }
 .card-name, .row-title { font-weight: 600; }
+.tnt-strip { padding: 8px 12px 0; }
+.tnt-kicker { margin: 0 0 6px; color: var(--brass-2); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.tnt-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+.tnt-card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 112px;
+  min-height: 64px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  text-align: left;
+}
+.tnt-card .num { color: var(--brass); font-weight: 700; }
+.tnt-site { color: var(--faint); font-size: 0.72rem; }
+.tnt-list { display: flex; flex-direction: column; gap: 8px; padding: 8px 4px 24px; }
+.tnt-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 56px;
+}
+.official-link {
+  justify-self: end;
+  background: transparent;
+  border: 1px solid var(--brass);
+  color: var(--brass-2);
+  border-radius: 999px;
+  padding: 8px 12px;
+  text-decoration: none;
+  text-align: center;
+}
+.offline-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(239, 141, 116, 0.16);
+  color: var(--bad);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
 .card-meta, .row-sub, .count { color: var(--faint); font-size: 0.86rem; }
 .chip {
   border: 1px solid var(--line);

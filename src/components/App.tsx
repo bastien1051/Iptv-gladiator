@@ -33,6 +33,7 @@ import {
   view,
 } from '../store'
 const MORE: { id: string; label: string; test?: string }[] = [
+  { id: 'tnt', label: 'TNT France' },
   { id: 'combat', label: 'Sports de combat' },
   { id: 'films', label: 'Films' },
   { id: 'series', label: 'Séries' },

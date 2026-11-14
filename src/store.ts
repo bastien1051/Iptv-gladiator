@@ -21,10 +21,11 @@ import { kvGet, kvSet } from './lib/db'
 import { currentAndNext, mergeProgrammeMaps, programmesFor } from './lib/epg'
 import { parseXmltv } from './lib/xmltv'
 import { buildCatchupUrl, finalize, m3uEpgUrls, parseM3u, playlistProblem } from './lib/m3u'
+import { slotsFromProbe, TNT_ENTRIES, officialStreamHost, type TntSlot } from './data/tnt-france'
 import { isLightClient, loadSameOriginCatalog } from './lib/catalog'
 import { errorMessage, fetchText, fetchXmlMaybeGzip } from './lib/net'
 import { applyProxy } from './lib/stream'
-import { hashString } from './lib/text'
+import { hashString, normName } from './lib/text'
 import { OFFICIAL_ADULT_DRAFTS } from './data/adult-official'
 import { enterPlayerFullscreen, exitPlayerFullscreen } from './lib/fullscreen'
 import { fetchEpisodes, loadXtream, normalizeBase } from './lib/xtream'
@@ -70,6 +71,7 @@ const viewStack = signal<View[]>(['home'])
 let userNavigated = false
 export const view = computed(() => viewStack.value[viewStack.value.length - 1] ?? 'home')
 export const channels = signal<Channel[]>([])
+export const tntSlots = signal<TntSlot[]>(TNT_ENTRIES.map((entry) => ({ id: entry.id, number: entry.number, name: entry.name, officialUrl: entry.officialUrl, streamUrl: null })))
 export const adultChannels = signal<Channel[]>([])
 export const adultUnlocked = signal(false)
 export const adultLoading = signal(false)
@@ -244,9 +246,29 @@ export function toast(text: string, tone: Toast['tone'] = 'info'): void {
   }, 4600)
 }
 
+export function tntChannel(slot: TntSlot): Channel | null {
+  if (!slot.streamUrl || !officialStreamHost(slot.streamUrl)) return null
+  return {
+    id: `tnt:${slot.id}`,
+    name: slot.name,
+    urls: [{ url: slot.streamUrl, quality: 1 }],
+    country: 'FR',
+    languages: ['fra'],
+    categories: [],
+    adult: false,
+    combat: false,
+    searchBlob: normName(`${slot.name} tnt france`),
+    sourceId: 'tnt',
+    sourceName: 'TNT France',
+  }
+}
+
 export function findChannel(id: string | null): Channel | undefined {
   if (!id) return undefined
-  return channels.value.find((channel) => channel.id === id) ?? adultChannels.value.find((channel) => channel.id === id)
+  return channels.value.find((channel) => channel.id === id)
+    ?? adultChannels.value.find((channel) => channel.id === id)
+    ?? tntSlots.value.map(tntChannel).find((channel) => channel?.id === id)
+    ?? undefined
 }
 
 export function guideFor(channel: Channel): { current?: Programme; next?: Programme } {
@@ -317,7 +339,7 @@ export function toPlayable(channel: Channel, kind: PlayKind, startAt?: number): 
 }
 
 export function playChannel(id: string, list?: Channel[], fullscreen = false): void {
-  const channel = findChannel(id)
+  const channel = findChannel(id) ?? list?.find((item) => item.id === id)
   if (!channel) return
   if (channel.adult && !adultUnlocked.value) {
     pendingAdultId = id
@@ -423,7 +445,7 @@ export function playPrevious(): void {
 export function noteFailure(id: string | null): void {
   if (!id) return
   fails[id] = (fails[id] ?? 0) + 1
-  if (fails[id] >= 2 && !dead.value.includes(id)) {
+  if (fails[id] >= 1 && !dead.value.includes(id)) {
     dead.value = [...dead.value, id]
     void persistPrefs()
   }
@@ -787,8 +809,21 @@ function restorePersonal(catalog: Channel[], personal: Channel[]): Channel[] {
   return next
 }
 
+async function loadTnt(): Promise<void> {
+  try {
+    const response = await fetch(new URL('channels/tnt.json', document.baseURI).toString(), { cache: 'no-store' })
+    if (!response.ok) return
+    const body = (await response.json()) as { slots?: { id: string; streamUrl?: string | null }[] }
+    if (!Array.isArray(body.slots)) return
+    tntSlots.value = slotsFromProbe(body.slots.map((slot) => ({ id: slot.id, streamUrl: slot.streamUrl ?? null })))
+  } catch {
+    /* la section reste cliquable vers les sites officiels */
+  }
+}
+
 async function paintCatalog(full: boolean): Promise<void> {
   const personal = channels.value.filter((channel) => !isFreeChannel(channel))
+  void loadTnt()
   const loaded = await loadSameOriginCatalog({
     full,
     onBatch: (list) => {

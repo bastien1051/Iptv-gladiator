@@ -109,6 +109,27 @@ describe('listes et classement', () => {
     })
     expect(sport).toHaveLength(1)
   })
+
+  test('une chaîne en échec disparaît des listes et reste dans la recherche', () => {
+    const live = sample({ id: 'live', name: 'Cinéma gratuit', categories: ['movies'], searchBlob: 'cinema gratuit' })
+    const down = sample({ id: 'down', name: 'Vieux film', categories: ['movies'], searchBlob: 'vieux film' })
+    const base = {
+      channels: [live, down],
+      adult: [],
+      includeAdult: false,
+      groupBy: 'country' as const,
+      group: 'ALL',
+      hidden: [],
+      dead: ['down'],
+      hideDead: true,
+      favorites: [],
+      recents: [],
+    }
+    const films = filterChannels({ ...base, shelf: 'movies', query: '' })
+    expect(films.map((channel) => channel.id)).toEqual(['live'])
+    const found = filterChannels({ ...base, shelf: 'all', query: 'vieux' })
+    expect(found.map((channel) => channel.id)).toEqual(['down'])
+  })
 })
 
 describe('guide, flux et xtream', () => {

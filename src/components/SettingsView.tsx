@@ -60,7 +60,7 @@ export function SettingsView() {
         <label class="check"><input type="checkbox" checked={current.resumeLast} onChange={(event) => updateSettings({ resumeLast: (event.currentTarget as HTMLInputElement).checked })} /> Reprendre la dernière chaîne au lancement</label>
         <label class="check"><input type="checkbox" checked={current.autoSkip} onChange={(event) => updateSettings({ autoSkip: (event.currentTarget as HTMLInputElement).checked })} /> Passer à la suivante si le flux échoue</label>
         <label class="check"><input type="checkbox" checked={current.dedupeFeed} onChange={(event) => updateSettings({ dedupeFeed: (event.currentTarget as HTMLInputElement).checked })} /> Fusionner les doublons d’une même chaîne</label>
-        <label class="check"><input type="checkbox" checked={current.hideDead} onChange={(event) => updateSettings({ hideDead: (event.currentTarget as HTMLInputElement).checked })} /> Masquer les chaînes hors service</label>
+        <label class="check"><input type="checkbox" checked={current.hideDead} onChange={(event) => updateSettings({ hideDead: (event.currentTarget as HTMLInputElement).checked })} /> Masquer les chaînes hors ligne</label>
         <label class="check"><input type="checkbox" checked={current.tvLarge} onChange={(event) => updateSettings({ tvLarge: (event.currentTarget as HTMLInputElement).checked })} /> Grand format télévision</label>
         <label class="check"><input type="checkbox" checked={current.previewMuted} onChange={(event) => updateSettings({ previewMuted: (event.currentTarget as HTMLInputElement).checked })} /> Aperçu en sourdine</label>
       </section>

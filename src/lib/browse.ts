@@ -43,7 +43,7 @@ export function filterChannels(input: BrowseInput): Channel[] {
     pool = input.includeAdult ? input.channels.concat(input.adult) : input.channels
   } else pool = input.channels
 
-  const keepDead = !!query || input.shelf === 'combat' || input.shelf === 'sport'
+  const keepDead = !!query
   let list = pool.filter((channel) => passes(channel, hidden, dead, input.hideDead, input.includeAdult || input.shelf === 'adult', keepDead))
 
   if (input.shelf === 'sport') list = list.filter((channel) => channel.categories.includes('sports'))

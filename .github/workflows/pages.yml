@@ -22,6 +22,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,8 +30,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # npm run build retélécharge iptv-org et les playlists FAST, puis écrit le JSON du catalogue.
+      # npm run build retélécharge iptv-org, retire les flux géobloqués, hors 24/7,
+      # payants ou morts, puis écrit le JSON du catalogue.
       - run: npm run build
+        env:
+          PROBE_STREAMS: '1'
+          PROBE_CONCURRENCY: '48'
+          PROBE_TIMEOUT_MS: '8000'
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3
         with:

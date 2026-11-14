@@ -15,6 +15,7 @@ export function Sidebar() {
   const items: Item[] = [
     { id: 'home', label: 'Accueil', active: current === 'home', run: () => go('home') },
     { id: 'direct', label: 'Direct', test: 'nav-direct', active: current === 'direct' && shelf.value === 'all', run: () => openBrowse('all') },
+    { id: 'tnt', label: 'TNT France', test: 'nav-tnt-side', active: current === 'direct' && shelf.value === 'tnt', run: () => openBrowse('tnt') },
     { id: 'sport', label: 'Sports', test: 'nav-sports', active: current === 'direct' && shelf.value === 'sport', run: () => openBrowse('sport') },
     { id: 'combat', label: 'Sports de combat', test: 'nav-combat', active: current === 'direct' && shelf.value === 'combat', run: () => openBrowse('combat') },
     { id: 'films', label: 'Films', active: current === 'library' && libraryTab.value === 'films', run: () => { libraryTab.value = 'films'; go('library') } },
@@ -60,6 +61,7 @@ export function Sidebar() {
 export function openMobileSection(id: string): void {
   const shelves: Record<string, Shelf> = {
     direct: 'all',
+    tnt: 'tnt',
     sport: 'sport',
     combat: 'combat',
     favorites: 'favorites',

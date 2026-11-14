@@ -30,7 +30,8 @@ export function ChannelButton({ channel, index, list }: { channel: Channel; inde
         <span class="row-copy">
           <span class="row-title">{channel.name}</span>
           <span class="row-sub">
-            {failed ? 'Hors service' : guide.current ? guide.current.title : 'Programme non annoncé'}
+            {failed && <span class="offline-tag">Hors ligne</span>}
+            {failed ? '' : guide.current ? guide.current.title : 'Programme non annoncé'}
             {guide.next ? ` · ensuite ${guide.next.title}` : ''}
           </span>
         </span>

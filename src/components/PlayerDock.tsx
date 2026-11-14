@@ -90,7 +90,7 @@ export function PlayerDock({ compact }: { compact: boolean }) {
       onFatal: (message) => {
         playerFatal.value = message
         playerStatus.value = ''
-        if (!phoneLayout()) noteFailure(idRef.current)
+        noteFailure(idRef.current)
       },
       onLevels: (next, current) => {
         setLevels(next)
@@ -179,10 +179,10 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     autoRef.current?.stop()
     if (!id) return
     const timer = window.setTimeout(() => {
-      if (startedRef.current || !idRef.current) return
+      if (startedRef.current || !idRef.current || needsGesture.value) return
       playerFatal.value = 'Cette chaîne ne marche pas'
       playerStatus.value = ''
-      if (!phoneLayout()) noteFailure(idRef.current)
+      noteFailure(idRef.current)
       engineRef.current?.stop()
     }, 15000)
     return () => window.clearTimeout(timer)

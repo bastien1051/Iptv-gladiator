@@ -194,6 +194,7 @@ export type Shelf =
   | 'adult'
   | 'movies'
   | 'series'
+  | 'tnt'
 
 export type GroupBy = 'country' | 'category' | 'language' | 'source'
 
