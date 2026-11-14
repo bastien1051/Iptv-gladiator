@@ -106,6 +106,7 @@ export type Settings = {
   adultConsent: boolean
   proxyBase: string
   tvLarge: boolean
+  previewMuted: boolean
   lastChannelId: string | null
   lastSafeChannelId: string | null
 }

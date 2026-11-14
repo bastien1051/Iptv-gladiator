@@ -28,6 +28,7 @@ export class AutoSubs {
   private stopped = true
   private silentChunks = 0
   private events: AutoSubEvents | null = null
+  private arm = 0
 
   start(video: HTMLVideoElement, events: AutoSubEvents): void {
     this.stop()
@@ -36,6 +37,12 @@ export class AutoSubs {
     this.ready = false
     this.pending = new Float32Array(0)
     this.silentChunks = 0
+    this.arm = window.setTimeout(() => {
+      if (!this.stopped) this.attach(video, events)
+    }, 1600)
+  }
+
+  private attach(video: HTMLVideoElement, events: AutoSubEvents): void {
     let stream: MediaStream | undefined
     try {
       const cap = video as HTMLVideoElement & { captureStream?: () => MediaStream; mozCaptureStream?: () => MediaStream }
@@ -73,11 +80,20 @@ export class AutoSubs {
       events.onStatus('Sous-titres auto interrompus. La lecture continue.')
     }
     this.worker.postMessage({ type: 'init' })
+    const startedAt = video.currentTime
+    window.setTimeout(() => {
+      if (this.stopped) return
+      if (video.currentTime < startedAt + 0.35) {
+        this.releaseCapture()
+        events.onUnavailable('Sous-titres auto indisponibles pour cette chaîne')
+      }
+    }, 1800)
   }
 
   stop(): void {
     this.stopped = true
     this.ready = false
+    window.clearTimeout(this.arm)
     this.pending = new Float32Array(0)
     if (this.worker) {
       this.worker.postMessage({ type: 'stop' })

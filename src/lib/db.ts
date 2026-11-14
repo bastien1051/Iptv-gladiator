@@ -37,6 +37,22 @@ export async function kvGet<T>(key: string): Promise<T | undefined> {
   }
 }
 
+export async function kvKeys(): Promise<string[]> {
+  if (mode === 'memory' || typeof indexedDB === 'undefined') return [...memory.keys()]
+  try {
+    const db = await openDb()
+    return await new Promise<string[]>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly')
+      const request = tx.objectStore(STORE).getAllKeys()
+      request.onsuccess = () => resolve(request.result.map((key) => String(key)))
+      request.onerror = () => reject(request.error)
+    })
+  } catch {
+    mode = 'memory'
+    return [...memory.keys()]
+  }
+}
+
 export async function kvSet(key: string, value: unknown): Promise<void> {
   memory.set(key, value)
   if (mode === 'memory' || typeof indexedDB === 'undefined') {

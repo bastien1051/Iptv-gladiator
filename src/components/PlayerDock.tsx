@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { Engine } from '../player/engine'
-import { fullscreenOn, prefersImmersiveFill, togglePlayerFullscreen } from '../lib/fullscreen'
+import { enterPlayerFullscreen, fullscreenOn, prefersImmersiveFill, togglePlayerFullscreen } from '../lib/fullscreen'
 import { phoneLayout } from '../lib/phone'
 import { downloadBlob, startCapture } from '../player/record'
 import { formatClock, formatTimecode, slug } from '../lib/text'
@@ -330,6 +330,13 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     } else lastTap.current = now
   }
 
+  const previewMuted = settings.value.previewMuted
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.muted = fullscreenOn.value ? muted : muted || previewMuted
+  }, [fullscreenOn.value, muted, previewMuted, id, token])
+
   const overlay = phone || fullscreenOn.value
 
   return (
@@ -355,8 +362,12 @@ export function PlayerDock({ compact }: { compact: boolean }) {
         {channel && <Logo src={channel.logo} name={channel.name} />}
         <div>
           <button type="button" class="stage-title" data-nav onClick={() => { if (compact) go('direct'); else setInfo((value) => !value) }}>{title}</button>
-          <p>{nowTitle}{guide.next ? ` · ensuite ${guide.next.title}` : ''}</p>
+          <p>{nowTitle}</p>
+          {guide.next && <p class="preview-next">Ensuite {guide.next.title}</p>}
         </div>
+        {id && !fullscreenOn.value && (
+          <button type="button" class="preview-full" data-nav data-testid="preview-fullscreen" onClick={() => enterPlayerFullscreen()}>Plein écran</button>
+        )}
       </div>
       {overlay && id && (
         <div class={`icon-bar ${fullscreenOn.value && !chrome ? 'is-hidden' : ''}`} data-testid="icon-bar">

@@ -68,6 +68,8 @@ describe('listes et classement', () => {
 
   test('les mots de combat et Adult Swim', () => {
     expect(isCombat('Glory Kickboxing Poland', 'Sports', ['sports'])).toBe(true)
+    expect(isCombat('Glory TV', 'Sports', ['sports'])).toBe(true)
+    expect(isCombat('UFC Fight Night', 'Sports', ['sports'])).toBe(true)
     expect(isCombat('Cuisine TV', 'Cooking', ['cooking'])).toBe(false)
     expect(isAdultChannel('Adult Swim', 'Animation', ['animation'], false)).toBe(false)
     expect(isAdultChannel('Night', 'XXX', ['xxx'], false)).toBe(true)

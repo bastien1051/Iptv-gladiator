@@ -316,6 +316,7 @@ export class Engine {
       this.playNative(url, token)
       return
     }
+    this.keepMedia()
     const buffer = this.settings().bufferSec
     const tv = /Tizen|Web0S|WebOS|SMART-TV|SmartTV|HbbTV|AFT|Android TV/i.test(navigator.userAgent)
     const hls = new Hls({
@@ -329,7 +330,8 @@ export class Engine {
       manifestLoadingTimeOut: 12000,
       fragLoadingTimeOut: 20000,
       fragLoadingMaxRetry: 4,
-      renderTextTracksNatively: true,
+      enableCEA708Captions: false,
+      renderTextTracksNatively: false,
     })
     this.hls = hls
     this.backend = 'hls'
@@ -337,6 +339,7 @@ export class Engine {
     hls.loadSource(url)
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       if (token !== this.token) return
+      this.hideNativeSubs(hls)
       this.applyCap(hls)
       this.emitHlsLevels()
       this.emitHlsAudio()
@@ -344,12 +347,18 @@ export class Engine {
     })
     hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => this.emitHlsAudio())
     hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => {
+      this.hideNativeSubs(hls)
       this.emitHlsSubs()
       this.maybeFrenchHls(hls)
     })
     hls.on(Hls.Events.LEVEL_SWITCHED, () => this.emitHlsLevels())
     hls.on(Hls.Events.ERROR, (_event, data) => {
-      if (token !== this.token || !data.fatal) return
+      if (token !== this.token) return
+      if (String(data.details || '').toLowerCase().includes('subtitle')) {
+        this.hideNativeSubs(hls)
+        return
+      }
+      if (!data.fatal) return
       if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !this.mediaRecovered) {
         this.mediaRecovered = true
         hls.recoverMediaError()
@@ -402,6 +411,31 @@ export class Engine {
     this.handlers.onSubs(tracks, this.hls.subtitleTrack)
   }
 
+  private hideNativeSubs(hls: Hls): void {
+    if (this.video.querySelector('track[data-external]')) return
+    const french = hls.subtitleTracks.findIndex((track) => {
+      const code = (track.lang || '').toLowerCase()
+      const name = (track.name || '').toLowerCase()
+      return code.startsWith('fr') || name.includes('fran')
+    })
+    try {
+      if (french < 0) {
+        hls.subtitleDisplay = false
+        hls.subtitleTrack = -1
+      }
+    } catch {
+      /* piste déjà absente */
+    }
+    const tracks = this.video.textTracks
+    for (let i = 0; i < tracks.length; i += 1) {
+      const track = tracks[i]
+      if (!track || track.kind === 'metadata') continue
+      const lang = (track.language || '').toLowerCase()
+      if (lang.startsWith('fr')) continue
+      track.mode = 'disabled'
+    }
+  }
+
   private maybeFrenchHls(hls: Hls): void {
     if (this.frenchDone) return
     const audio = hls.audioTracks[hls.audioTrack]
@@ -420,6 +454,7 @@ export class Engine {
   }
 
   private async playDash(url: string, token: number): Promise<void> {
+    this.keepMedia()
     const shaka = await loadShaka()
     shaka.polyfill.installAll()
     if (!shaka.Player.isBrowserSupported()) throw new Error('DASH non pris en charge par ce navigateur.')
@@ -462,6 +497,7 @@ export class Engine {
   }
 
   private async playTs(url: string, mode: 'mpegts' | 'flv', token: number): Promise<void> {
+    this.keepMedia()
     const mpegts = (await import('mpegts.js')).default
     if (!mpegts.isSupported()) {
       this.playNative(url, token)
@@ -482,13 +518,21 @@ export class Engine {
 
   private playNative(url: string, token: number): void {
     if (token !== this.token) return
+    this.keepMedia()
     this.backend = 'native'
     this.video.src = url
     this.video.load()
   }
 
+  private mediaWipe = 0
+
+  private keepMedia(): void {
+    window.clearTimeout(this.mediaWipe)
+  }
+
   private destroyBackends(): void {
     window.clearTimeout(this.retryTimer)
+    window.clearTimeout(this.mediaWipe)
     if (this.hls) {
       this.hls.destroy()
       this.hls = null
@@ -516,6 +560,6 @@ export class Engine {
       }
     }
     wipe()
-    window.setTimeout(wipe, 0)
+    this.mediaWipe = window.setTimeout(wipe, 0)
   }
 }

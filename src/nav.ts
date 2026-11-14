@@ -1,17 +1,20 @@
-import { isPlayerFullscreen, togglePlayerFullscreen } from './lib/fullscreen'
+import { exitPlayerFullscreen, isPlayerFullscreen, togglePlayerFullscreen } from './lib/fullscreen'
 import {
   back,
   closePlayer,
   currentId,
+  directList,
   go,
   hotkeys,
   moreOpen,
   multiHooks,
   numberEntry,
+  playChannel,
   playPrevious,
   query,
   view,
   zap,
+  zapList,
   zapToNumber,
 } from './store'
 
@@ -97,7 +100,11 @@ function onKey(event: KeyboardEvent): void {
   }
   if (!typing && isBackKey(event)) {
     event.preventDefault()
-    if (currentId.value || isPlayerFullscreen()) {
+    if (isPlayerFullscreen()) {
+      exitPlayerFullscreen()
+      return
+    }
+    if (currentId.value) {
       closePlayer()
       return
     }
@@ -177,6 +184,9 @@ function onKey(event: KeyboardEvent): void {
     if (next >= 0 && next < total) {
       event.preventDefault()
       window.dispatchEvent(new CustomEvent('leposte-focus-row', { detail: next }))
+      const list = zapList.value.length ? zapList.value : directList.value
+      const channel = list[next]
+      if (channel && channel.id !== currentId.value) playChannel(channel.id, list, false)
       return
     }
   }
@@ -196,7 +206,11 @@ function onClickCapture(event: Event): void {
 }
 
 export function handleSystemBack(): boolean {
-  if (currentId.value || isPlayerFullscreen()) {
+  if (isPlayerFullscreen()) {
+    exitPlayerFullscreen()
+    return true
+  }
+  if (currentId.value) {
     closePlayer()
     return true
   }
@@ -209,23 +223,17 @@ export function handleSystemBack(): boolean {
   return false
 }
 
-function onFullscreenDismissed(): void {
-  if (currentId.value) closePlayer()
-}
-
 export function installNav(): () => void {
   const host = window as Window & { __iptvBack?: () => boolean }
   host.__iptvBack = handleSystemBack
   window.addEventListener('keydown', onKey)
   window.addEventListener('keyup', onKeyUp)
   window.addEventListener('click', onClickCapture, true)
-  window.addEventListener('iptv-fullscreen-dismissed', onFullscreenDismissed)
   return () => {
     if (host.__iptvBack === handleSystemBack) delete host.__iptvBack
     window.removeEventListener('keydown', onKey)
     window.removeEventListener('keyup', onKeyUp)
     window.removeEventListener('click', onClickCapture, true)
-    window.removeEventListener('iptv-fullscreen-dismissed', onFullscreenDismissed)
   }
 }
 

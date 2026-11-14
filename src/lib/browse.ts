@@ -16,9 +16,9 @@ export type BrowseInput = {
   recents: string[]
 }
 
-function passes(channel: Channel, hidden: Set<string>, dead: Set<string>, hideDead: boolean, includeAdult: boolean): boolean {
+function passes(channel: Channel, hidden: Set<string>, dead: Set<string>, hideDead: boolean, includeAdult: boolean, keepDead: boolean): boolean {
   if (hidden.has(channel.id)) return false
-  if (hideDead && dead.has(channel.id)) return false
+  if (hideDead && !keepDead && dead.has(channel.id)) return false
   if (channel.adult && !includeAdult) return false
   return true
 }
@@ -43,7 +43,8 @@ export function filterChannels(input: BrowseInput): Channel[] {
     pool = input.includeAdult ? input.channels.concat(input.adult) : input.channels
   } else pool = input.channels
 
-  let list = pool.filter((channel) => passes(channel, hidden, dead, input.hideDead, input.includeAdult || input.shelf === 'adult'))
+  const keepDead = !!query || input.shelf === 'combat' || input.shelf === 'sport'
+  let list = pool.filter((channel) => passes(channel, hidden, dead, input.hideDead, input.includeAdult || input.shelf === 'adult', keepDead))
 
   if (input.shelf === 'sport') list = list.filter((channel) => channel.categories.includes('sports'))
   else if (input.shelf === 'combat') list = list.filter((channel) => channel.combat)

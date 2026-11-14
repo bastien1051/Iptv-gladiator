@@ -2,10 +2,10 @@ import { useState } from 'preact/hooks'
 import type { SeriesItem } from '../types'
 import { VirtualList, useRowFocus } from './VirtualList'
 import { ChannelButton, Logo } from './rows'
-import { adultUnlocked, episodes, movieShelf, openSeries, playEpisode, playVod, seriesItems, seriesShelf, vodItems } from '../store'
+import { adultUnlocked, episodes, libraryTab, movieShelf, openSeries, playEpisode, playVod, seriesItems, seriesShelf, vodItems } from '../store'
 
 export function LibraryView() {
-  const [tab, setTab] = useState<'films' | 'series'>('films')
+  const tab = libraryTab.value
   const [openId, setOpenId] = useState<string | null>(null)
   const films = movieShelf.value
   const seriesChannels = seriesShelf.value
@@ -22,8 +22,8 @@ export function LibraryView() {
           <h1>Films & Séries</h1>
         </div>
         <div class="chips">
-          <button type="button" data-nav class={tab === 'films' ? 'chip on' : 'chip'} onClick={() => setTab('films')}>Films</button>
-          <button type="button" data-nav class={tab === 'series' ? 'chip on' : 'chip'} onClick={() => setTab('series')}>Séries</button>
+          <button type="button" data-nav class={tab === 'films' ? 'chip on' : 'chip'} onClick={() => { libraryTab.value = 'films' }}>Films</button>
+          <button type="button" data-nav class={tab === 'series' ? 'chip on' : 'chip'} onClick={() => { libraryTab.value = 'series' }}>Séries</button>
         </div>
       </header>
       <p class="lede">Les chaînes ci-dessous diffusent en continu. Les films et épisodes à la demande apparaissent si vous ajoutez un serveur Xtream Codes dans les réglages.</p>

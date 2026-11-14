@@ -16,6 +16,7 @@ import { PlayerDock } from './PlayerDock'
 import { ReplayView } from './ReplayView'
 import { ScheduleHost } from './ScheduleHost'
 import { SettingsView } from './SettingsView'
+import { openMobileSection, Sidebar } from './Sidebar'
 import {
   boot,
   captureInstall,
@@ -27,20 +28,18 @@ import {
   retryLoad,
   screenError,
   settings,
+  shelf,
   toasts,
   view,
 } from '../store'
-import type { View } from '../types'
-
-const RAIL: { id: View; label: string; test?: string }[] = [
-  { id: 'home', label: 'Accueil' },
-  { id: 'abonnement', label: 'Abonnement', test: 'nav-abonnement' },
-  { id: 'direct', label: 'Direct' },
-  { id: 'guide', label: 'Guide' },
-  { id: 'library', label: 'Films' },
+const MORE: { id: string; label: string; test?: string }[] = [
+  { id: 'combat', label: 'Sports de combat' },
+  { id: 'films', label: 'Films' },
+  { id: 'series', label: 'Séries' },
   { id: 'replay', label: 'Replay' },
-  { id: 'multi', label: 'Écrans' },
-  { id: 'adult', label: 'Adulte', test: 'nav-adult' },
+  { id: 'guide', label: 'Guide TV' },
+  { id: 'adult', label: 'Adulte 18+', test: 'nav-adult-mobile' },
+  { id: 'abonnement', label: 'Mes listes' },
   { id: 'settings', label: 'Réglages' },
   { id: 'help', label: 'Aide' },
   { id: 'about', label: 'À propos' },
@@ -63,19 +62,13 @@ export function App() {
 
   const current = view.value
   const playing = currentId.value !== null
-  const dock = current === 'multi' ? 'hidden' : current === 'direct' ? 'full' : playing ? 'mini' : 'off'
+  const browsing = current === 'direct' || current === 'home' || current === 'library'
+  const dock = current === 'multi' ? 'hidden' : browsing && playing ? 'full' : browsing ? 'list' : playing ? 'mini' : 'off'
 
   return (
     <Guard>
       <div class={`shell dock-${dock} view-${current}`} data-tv={settings.value.tvLarge ? '1' : '0'}>
-        <nav class="rail" aria-label="Sections">
-          <p class="mark">IPTV<br />Gladiator</p>
-          {RAIL.map((item) => (
-            <button key={item.id} type="button" data-nav data-testid={item.test} class={current === item.id ? 'nav-btn on' : 'nav-btn'} onClick={() => go(item.id)}>
-              {item.label}
-            </button>
-          ))}
-        </nav>
+        <Sidebar />
         <Guard>
           <PlayerDock compact={dock !== 'full'} />
         </Guard>
@@ -101,16 +94,16 @@ export function App() {
         </main>
         <nav class="tabbar" aria-label="Navigation">
           <button type="button" data-nav class={current === 'home' ? 'on' : ''} onClick={() => go('home')}>Accueil</button>
-          <button type="button" data-nav class={current === 'direct' ? 'on' : ''} onClick={() => go('direct')}>Direct</button>
-          <button type="button" data-nav class={current === 'guide' ? 'on' : ''} onClick={() => go('guide')}>Guide</button>
-          <button type="button" data-nav class={current === 'library' ? 'on' : ''} onClick={() => go('library')}>Films</button>
+          <button type="button" data-nav class={current === 'direct' && shelf.value === 'all' ? 'on' : ''} onClick={() => openMobileSection('direct')}>Direct</button>
+          <button type="button" data-nav class={current === 'direct' && shelf.value === 'sport' ? 'on' : ''} onClick={() => openMobileSection('sport')}>Sports</button>
+          <button type="button" data-nav class={current === 'direct' && shelf.value === 'favorites' ? 'on' : ''} onClick={() => openMobileSection('favorites')}>Favoris</button>
           <button type="button" data-nav data-testid="nav-more" class={moreOpen.value ? 'on' : ''} onClick={() => { moreOpen.value = !moreOpen.value }}>Plus</button>
         </nav>
         {moreOpen.value && (
           <div class="sheet">
-            {(['abonnement', 'replay', 'multi', 'adult', 'settings', 'help', 'about'] as View[]).map((item) => (
-              <button key={item} type="button" data-nav data-testid={item === 'adult' ? 'nav-adult-mobile' : undefined} onClick={() => go(item)}>
-                {RAIL.find((entry) => entry.id === item)?.label}
+            {MORE.map((item) => (
+              <button key={item.id} type="button" data-nav data-testid={item.test} onClick={() => openMobileSection(item.id)}>
+                {item.label}
               </button>
             ))}
           </div>

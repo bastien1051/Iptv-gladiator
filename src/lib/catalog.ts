@@ -74,16 +74,32 @@ export async function loadSameOriginCatalog(options: {
   onBatch?: (channels: Channel[], partial: boolean) => void
 }): Promise<{ channels: Channel[]; partial: boolean; total: number }> {
   const manifestUrl = new URL('channels/manifest.json', document.baseURI)
-  const response = await fetch(manifestUrl.toString())
+  const response = await fetch(manifestUrl.toString(), { cache: 'no-store' })
   if (!response.ok) throw new Error(`Catalogue introuvable (HTTP ${response.status})`)
-  const manifest = (await response.json()) as CatalogManifest
+  const manifestText = await response.text()
+  let manifest: CatalogManifest
+  try {
+    manifest = JSON.parse(manifestText) as CatalogManifest
+  } catch {
+    throw new Error('Le catalogue reçu n’est pas une liste de chaînes.')
+  }
+  if (!manifest || !Array.isArray(manifest.files) || manifest.files.length === 0) {
+    throw new Error('Le catalogue est vide.')
+  }
   const files = options.full ? manifest.files : manifest.files.filter((file) => file.startsWith('p'))
   const channels: Channel[] = []
   for (const file of files) {
     const chunkUrl = new URL(`channels/${file}`, document.baseURI)
-    const chunk = await fetch(chunkUrl.toString())
-    if (!chunk.ok) throw new Error(`Morceau ${file} indisponible`)
-    const rows = (await chunk.json()) as CatalogTuple[]
+    const chunk = await fetch(chunkUrl.toString(), { cache: 'no-store' })
+    if (!chunk.ok) throw new Error(`Morceau ${file} indisponible (HTTP ${chunk.status})`)
+    const chunkText = await chunk.text()
+    let rows: CatalogTuple[]
+    try {
+      rows = JSON.parse(chunkText) as CatalogTuple[]
+    } catch {
+      throw new Error(`Morceau ${file} illisible.`)
+    }
+    if (!Array.isArray(rows)) throw new Error(`Morceau ${file} illisible.`)
     for (const row of rows) {
       const channel = decodeTuple(row)
       if (channel) channels.push(channel)

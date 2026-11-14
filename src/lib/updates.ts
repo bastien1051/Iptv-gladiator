@@ -20,12 +20,16 @@ export function watchUpdates(): void {
   let pending = false
   const reload = () => {
     if (reloading) return
-    reloading = true
+    let last = 0
     try {
+      last = Number(sessionStorage.getItem('iptv-sw-reload') || 0)
+      if (Date.now() - last < 120000) return
+      sessionStorage.setItem('iptv-sw-reload', String(Date.now()))
       sessionStorage.setItem(MARK, '1')
     } catch {
       /* navigation privée */
     }
+    reloading = true
     window.location.reload()
   }
   const apply = () => {

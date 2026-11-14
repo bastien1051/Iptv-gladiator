@@ -61,6 +61,7 @@ const defaultSettings: Settings = {
   adultConsent: false,
   proxyBase: '',
   tvLarge: false,
+  previewMuted: false,
   lastChannelId: null,
   lastSafeChannelId: null,
 }
@@ -80,6 +81,7 @@ export const catalogTotal = signal(0)
 export const indexed = signal(false)
 export const query = signal('')
 export const shelf = signal<Shelf>('all')
+export const libraryTab = signal<'films' | 'series'>('films')
 export const groupBy = signal<'country' | 'category' | 'language' | 'source'>('country')
 export const group = signal('FR')
 export const favorites = signal<string[]>([])
@@ -207,6 +209,16 @@ function focusHome(): void {
   window.setTimeout(() => {
     if (!focus()) window.setTimeout(focus, 200)
   }, 60)
+}
+
+export function openBrowse(next: Shelf): void {
+  shelf.value = next
+  query.value = ''
+  if (next === 'all') {
+    groupBy.value = 'category'
+    group.value = 'ALL'
+  }
+  go('direct')
 }
 
 export function go(next: View): void {

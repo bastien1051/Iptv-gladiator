@@ -14,7 +14,7 @@ export function GuideView() {
 
   function onProgramme(channel: Channel, programme: Programme): void {
     const now = Date.now()
-    if (programme.start <= now && programme.stop > now) playChannel(channel.id, channels, true)
+    if (programme.start <= now && programme.stop > now) playChannel(channel.id, channels, false)
     else if (programme.stop <= now) playReplay(channel, programme)
     else scheduleRecording(channel, programme)
   }
@@ -43,7 +43,7 @@ export function GuideView() {
           const programmes = programmesBetween(channel, origin, end)
           return (
             <div class="guide-row" key={channel.id}>
-              <button type="button" class="guide-name" data-nav onClick={() => playChannel(channel.id, channels, true)}>{channel.name}</button>
+              <button type="button" class="guide-name" data-nav onClick={() => playChannel(channel.id, channels, false)}>{channel.name}</button>
               <div class="guide-track">
                 {programmes.map((programme) => {
                   const left = ((programme.start - origin) / SPAN) * 100

@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks'
 import type { Channel } from '../types'
+import { enterPlayerFullscreen, isPlayerFullscreen } from '../lib/fullscreen'
 import { currentId, dead, favorites, guideFor, hideChannel, moveFavorite, nowMs, playChannel, shelf, toggleFavorite } from '../store'
 
 export function Logo({ src, name }: { src?: string; name: string }) {
@@ -17,7 +18,13 @@ export function ChannelButton({ channel, index, list }: { channel: Channel; inde
   const failed = dead.value.includes(channel.id)
   return (
     <div class={`row ${active ? 'active' : ''}`}>
-      <button type="button" class="row-main" data-nav data-row-index={index} onClick={() => playChannel(channel.id, list, true)}>
+      <button type="button" class="row-main" data-nav data-row-index={index} onClick={() => {
+        if (currentId.value === channel.id && !isPlayerFullscreen()) {
+          enterPlayerFullscreen()
+          return
+        }
+        playChannel(channel.id, list, false)
+      }} onDblClick={() => { playChannel(channel.id, list, false); enterPlayerFullscreen() }}>
         <span class="num">{index + 1}</span>
         <Logo src={channel.logo} name={channel.name} />
         <span class="row-copy">

@@ -2,7 +2,7 @@ import type { FastService } from '../types'
 import { normName } from './text'
 
 const COMBAT =
-  /\b(boxe|boxing|mma|ufc|catch|wrestling|wwe|aew|lucha|kickboxing|kick boxing|muay|savate|bellator|pancrace|full contact)\b/
+  /\b(boxe|boxing|mma|ufc|catch|wrestling|wwe|aew|lucha|kickboxing|kick boxing|kick-boxing|muay|savate|bellator|pancrace|full contact|glory|ksw|rizin|bkfc|pfl)\b/
 
 export function isCombat(name: string, groups: string, categories: string[]): boolean {
   const blob = normName(`${name} ${groups}`)

@@ -14,7 +14,9 @@ import {
   groupBy,
   indexed,
   loadFullCatalog,
+  loadError,
   loading,
+  retryLoad,
   newsShelf,
   openShelf,
   partialCatalog,
@@ -51,7 +53,7 @@ function ShelfRow({ title, kicker, items, shelf, testId }: { title: string; kick
       ) : (
         <div class="shelf-row">
           {items.slice(0, 24).map((channel) => (
-            <button key={channel.id} type="button" class="card" data-nav onClick={() => playChannel(channel.id, items, true)}>
+            <button key={channel.id} type="button" class="card" data-nav onClick={() => playChannel(channel.id, items, false)}>
               <Logo src={channel.logo} name={channel.name} />
               <span class="card-name">{channel.name}</span>
               <span class="card-meta">{channel.fast ? fastLabel(channel.fast) : channel.country === 'FR' ? 'France' : 'Direct'}</span>
@@ -89,6 +91,12 @@ export function HomeView() {
           <input data-nav data-testid="search" value={query.value} placeholder="Rechercher une chaîne, un sport, un pays…" onInput={(event) => { query.value = (event.currentTarget as HTMLInputElement).value }} />
         </label>
       </header>
+      {channels.value.length === 0 && (
+        <div class="load-error" data-testid="catalog-empty">
+          <p>{loadError.value || (loading.value ? 'Chargement des chaînes…' : 'Aucune chaîne chargée.')}</p>
+          <button type="button" data-nav onClick={() => { void retryLoad() }}>Réessayer</button>
+        </div>
+      )}
       <button type="button" class="abo-cta" data-nav data-testid="add-subscription" onClick={() => go('abonnement')}>
         Ajouter mon abonnement
       </button>
@@ -98,7 +106,7 @@ export function HomeView() {
         </button>
       )}
       {settings.value.lastSafeChannelId && (
-        <button type="button" class="resume" data-nav onClick={() => playChannel(settings.value.lastSafeChannelId!, undefined, true)}>
+        <button type="button" class="resume" data-nav onClick={() => playChannel(settings.value.lastSafeChannelId!, undefined, false)}>
           Reprendre la dernière chaîne
         </button>
       )}
@@ -132,7 +140,7 @@ export function HomeView() {
                 {source.lastError ? <p class="empty">{source.lastError}</p> : items.length === 0 ? <p class="empty">Ces chaînes sont déjà dans les listes gratuites, ou la source n’a pas encore répondu.</p> : (
                   <div class="shelf-row">
                     {items.slice(0, 24).map((channel) => (
-                      <button key={channel.id} type="button" class="card" data-nav onClick={() => playChannel(channel.id, items, true)}>
+                      <button key={channel.id} type="button" class="card" data-nav onClick={() => playChannel(channel.id, items, false)}>
                         <Logo src={channel.logo} name={channel.name} />
                         <span class="card-name">{channel.name}</span>
                         <span class="card-meta">{source.name}</span>
