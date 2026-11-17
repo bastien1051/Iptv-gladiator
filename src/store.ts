@@ -196,6 +196,7 @@ export const hotkeys = {
   info: () => undefined as void,
   record: () => undefined as void,
   play: () => undefined as void,
+  reveal: () => undefined as void,
 }
 export const multiHooks: { zap: ((delta: number) => void) | null } = { zap: null }
 export const playerHooks: { stop: () => void } = { stop: () => undefined }

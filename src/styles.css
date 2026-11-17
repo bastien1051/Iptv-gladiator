@@ -309,18 +309,36 @@ h2 { font-size: 1.7rem; }
 .stage:fullscreen,
 .stage:-webkit-full-screen {
   position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
   inset: 0 !important;
   z-index: 60 !important;
   width: 100vw !important;
+  height: 100vh !important;
   height: 100dvh !important;
+  min-height: 100vh !important;
   min-height: 100dvh !important;
+  max-width: none !important;
   margin: 0 !important;
   opacity: 1 !important;
   overflow: hidden !important;
   pointer-events: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
+  display: block !important;
   background: #000 !important;
+}
+html.is-player-fullscreen,
+html.is-player-fullscreen body {
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #000 !important;
+}
+html.is-player-fullscreen .rail,
+html.is-player-fullscreen .panel,
+html.is-player-fullscreen .tabbar {
+  visibility: hidden !important;
 }
 .fs-toggle {
   position: absolute;
@@ -334,17 +352,49 @@ h2 { font-size: 1.7rem; }
   padding: 8px 12px;
 }
 .stage video { width: 100%; flex: 1; min-height: 0; background: #070806; object-fit: contain; }
+.stage video::-webkit-media-controls,
+.stage video::-webkit-media-controls-enclosure,
+.stage video::-webkit-media-controls-panel,
+.stage video::-webkit-media-controls-play-button,
+.stage video::-webkit-media-controls-start-playback-button,
+.stage video::-webkit-media-controls-overlay-play-button,
+.stage video::-webkit-media-controls-timeline,
+.stage video::-webkit-media-controls-current-time-display,
+.stage video::-webkit-media-controls-time-remaining-display,
+.stage video::-webkit-media-controls-mute-button,
+.stage video::-webkit-media-controls-volume-slider,
+.stage video::-webkit-media-controls-fullscreen-button,
+.stage video::-webkit-media-controls-toggle-closed-captions-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
 .stage.is-fullscreen video,
 .stage:fullscreen video,
 .stage:-webkit-full-screen video {
   position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
   max-height: none !important;
+  max-width: none !important;
   flex: none !important;
   object-fit: contain !important;
   background: #000 !important;
+}
+.stage.fill-screen.is-fullscreen video,
+.stage.fill-screen:fullscreen video,
+.stage.fill-screen:-webkit-full-screen video,
+html[data-tv="1"] .stage.is-fullscreen video,
+html[data-tv="1"] .stage:fullscreen video {
+  object-fit: cover !important;
 }
 .stage.is-idle,
 .stage.is-idle.is-fullscreen,
@@ -410,9 +460,46 @@ h2 { font-size: 1.7rem; }
   transform: translateY(-50%);
   text-align: center;
 }
+.stage.is-fullscreen:not(.fill-screen) .controls { display: none !important; }
+.stage.is-fullscreen.fill-screen .controls,
+html[data-tv="1"] .stage.is-fullscreen .controls {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 6 !important;
+  margin: 0 !important;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.82));
+}
+html[data-tv="1"] .stage.is-fullscreen.chrome-off .controls,
+.stage.is-fullscreen.fill-screen.chrome-off .controls,
+.stage.is-fullscreen.chrome-off .controls,
+.stage.is-fullscreen.chrome-off .icon-bar,
+.stage.is-fullscreen.chrome-off .player-close,
+.stage.is-fullscreen.chrome-off .stage-copy,
+.stage.is-fullscreen.chrome-off .popover,
+.stage.is-fullscreen.chrome-off .live-clock,
 .stage.is-fullscreen .stage-copy,
-.stage.is-fullscreen .controls,
-.stage.is-fullscreen .live-clock { display: none !important; }
+.stage.is-fullscreen .live-clock {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+html[data-tv="1"] .stage.is-fullscreen.chrome-on .controls,
+.stage.is-fullscreen.fill-screen.chrome-on .controls {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+.stage.is-fullscreen.chrome-on .icon-bar,
+.stage.is-fullscreen.chrome-on .player-close {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
 .phone-tools { display: flex; gap: 8px; align-items: center; }
 .phone-tools .search { flex: 1; min-width: 0; }
 .phone-tools .search input { margin-top: 0; }

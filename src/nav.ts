@@ -1,4 +1,4 @@
-import { exitPlayerFullscreen, isPlayerFullscreen, togglePlayerFullscreen } from './lib/fullscreen'
+import { exitPlayerFullscreen, isPlayerFullscreen, isTelevision, togglePlayerFullscreen } from './lib/fullscreen'
 import {
   back,
   closePlayer,
@@ -101,7 +101,8 @@ function onKey(event: KeyboardEvent): void {
   if (!typing && isBackKey(event)) {
     event.preventDefault()
     if (isPlayerFullscreen()) {
-      exitPlayerFullscreen()
+      if (isTelevision()) closePlayer()
+      else exitPlayerFullscreen()
       return
     }
     if (currentId.value) {
@@ -135,7 +136,15 @@ function onKey(event: KeyboardEvent): void {
     togglePlayerFullscreen()
     return
   }
-  if (!typing && (key === 'Enter' || code === 23) && !event.repeat && !numberEntry.value) {
+  if (isPlayerFullscreen() && isTelevision() && !isBackKey(event)) {
+    hotkeys.reveal()
+    const stage = document.getElementById('player-stage')
+    if (stage?.classList.contains('chrome-off') && (arrowDirection(event) || key === 'Enter' || code === 23)) {
+      event.preventDefault()
+      return
+    }
+  }
+  if (!typing && (key === 'Enter' || code === 23) && !event.repeat && !numberEntry.value && !(isPlayerFullscreen() && isTelevision())) {
     window.clearTimeout(okTimer)
     okTimer = window.setTimeout(() => {
       suppressClick = true
@@ -207,7 +216,8 @@ function onClickCapture(event: Event): void {
 
 export function handleSystemBack(): boolean {
   if (isPlayerFullscreen()) {
-    exitPlayerFullscreen()
+    if (isTelevision()) closePlayer()
+    else exitPlayerFullscreen()
     return true
   }
   if (currentId.value) {

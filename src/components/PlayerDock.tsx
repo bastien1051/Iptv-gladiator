@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { Engine } from '../player/engine'
-import { enterPlayerFullscreen, fullscreenOn, prefersImmersiveFill, togglePlayerFullscreen } from '../lib/fullscreen'
+import { enterPlayerFullscreen, fullscreenOn, prefersImmersiveFill, silenceNativeControls, togglePlayerFullscreen } from '../lib/fullscreen'
 import { phoneLayout } from '../lib/phone'
 import { downloadBlob, startCapture } from '../player/record'
 import { formatClock, formatTimecode, slug } from '../lib/text'
@@ -129,6 +129,13 @@ export function PlayerDock({ compact }: { compact: boolean }) {
       if (video.paused) void video.play()
       else video.pause()
     }
+    hotkeys.reveal = () => revealChrome()
+    silenceNativeControls(video)
+    const keepSilent = () => silenceNativeControls(video)
+    video.addEventListener('loadedmetadata', keepSilent)
+    video.textTracks.addEventListener('addtrack', keepSilent)
+    const controlGuard = new MutationObserver(keepSilent)
+    controlGuard.observe(video, { attributes: true, attributeFilter: ['controls'] })
     hotkeys.record = () => { void toggleRecord() }
     autoRef.current = new AutoSubs()
     playerHooks.stop = () => {
@@ -138,6 +145,9 @@ export function PlayerDock({ compact }: { compact: boolean }) {
     return () => {
       playerHooks.stop = () => undefined
       video.removeEventListener('pause', onPause)
+      video.removeEventListener('loadedmetadata', keepSilent)
+      video.textTracks.removeEventListener('addtrack', keepSilent)
+      controlGuard.disconnect()
       autoRef.current?.stop()
       autoRef.current = null
       engine.destroy()
@@ -163,7 +173,17 @@ export function PlayerDock({ compact }: { compact: boolean }) {
       setMore(false)
       setMenu('none')
     }, 3000)
-    return () => window.clearTimeout(timer)
+    const wake = (event: Event) => {
+      if (event instanceof KeyboardEvent && event.repeat) return
+      revealChrome()
+    }
+    window.addEventListener('keydown', wake)
+    window.addEventListener('mousemove', wake)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('keydown', wake)
+      window.removeEventListener('mousemove', wake)
+    }
   }, [fullscreenOn.value, chromeTick, id])
 
   useEffect(() => {
@@ -338,10 +358,11 @@ export function PlayerDock({ compact }: { compact: boolean }) {
   }, [fullscreenOn.value, muted, previewMuted, id, token])
 
   const overlay = phone || fullscreenOn.value
+  const tvFullscreen = fullscreenOn.value && prefersImmersiveFill()
 
   return (
     <section id="player-stage" class={`stage ${!id ? 'is-idle' : ''} ${compact ? 'compact' : ''} ${fullscreenOn.value ? 'is-fullscreen' : ''} ${fullscreenOn.value && prefersImmersiveFill() ? 'fill-screen' : ''} ${chrome || !fullscreenOn.value ? 'chrome-on' : 'chrome-off'}`} ref={stageRef} data-testid="stage" onPointerDown={() => { if (fullscreenOn.value) revealChrome() }} onPointerUp={onStagePointerUp}>
-      <video ref={videoRef} data-testid="player-video" playsInline />
+      <video ref={videoRef} data-testid="player-video" playsInline disablePictureInPicture disableRemotePlayback controlsList="nodownload nofullscreen noremoteplayback noplaybackrate" />
       {id && (
         <button type="button" class="player-close" data-testid="player-close" data-nav aria-label="Fermer" onClick={() => closePlayer()}>×</button>
       )}
@@ -369,7 +390,7 @@ export function PlayerDock({ compact }: { compact: boolean }) {
           <button type="button" class="preview-full" data-nav data-testid="preview-fullscreen" onClick={() => enterPlayerFullscreen()}>Plein écran</button>
         )}
       </div>
-      {overlay && id && (
+      {overlay && id && !tvFullscreen && (
         <div class={`icon-bar ${fullscreenOn.value && !chrome ? 'is-hidden' : ''}`} data-testid="icon-bar">
           <button type="button" data-nav aria-label={playing ? 'Pause' : 'Lecture'} onClick={() => hotkeys.play()}>{playing ? '❚❚' : '▶'}</button>
           <button type="button" data-nav aria-label="Précédente" onClick={() => zap(-1)}>⏮</button>
@@ -386,7 +407,7 @@ export function PlayerDock({ compact }: { compact: boolean }) {
           <button type="button" data-nav onClick={() => { void toggleRecord(); setMore(false) }}>{manualRecording.value ? 'Stop enregistrement' : 'Enregistrer'}</button>
         </div>
       )}
-      {!overlay && !compact && (
+      {((!overlay && !compact) || tvFullscreen) && (
         <div class="controls">
           <button type="button" data-nav onClick={() => hotkeys.play()}>{playing ? 'Pause' : 'Lecture'}</button>
           <button type="button" data-nav onClick={() => zap(-1)}>Précédente</button>
